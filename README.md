@@ -24,44 +24,45 @@ After you run Andy X you will have to configure Andy X MSSQL Source Connector. C
 Below is an example of configuration file, this file should be saved into config directory of Andy X MSSQL Source Connector before running this service.
 
 ```json
-	{
-	  "Servers": [
-	    {
-	      "Name": "MSSQL",
-	      "ConnectionString": "Data Source=localhost;Initial Catalog={databaseName/master};Integrated Security=False;User Id=sa;Password=YourStrong!Passw0rd;MultipleActiveResultSets=True",
-	      "Databases": [
-	        {
-	          "Name": "{databaseName}",
-	          "Tables": [
-	            {
-	              "Name": "{tableName}",
-	              "IncludeOldVersion": true or false,
-	              "Topic": {topicName}
-	            },
-	            {
-	              "Name": "{tableName}",
-	              "IncludeOldVersion": true or false,
-	              "Topic": {topicName}
-	            }
-	          ]
-	        }
-	      ]
-	    }
-	  ]
-	}
+{
+  "Servers": [
+    {
+      "Name": "MSSQL",
+      "ConnectionString": "Data Source=localhost;Initial Catalog={databaseName/master};Integrated Security=False;User Id=sa;Password=YourStrong!Passw0rd;MultipleActiveResultSets=True",
+      "Databases": [
+        {
+          "Name": "{databaseName}",
+          "Tables": [
+            {
+              "Name": "{tableName}",
+              "IncludeOldVersion": {true or false},
+              "Topic": {topicName}
+            },
+            {
+              "Name": "{tableName}",
+              "IncludeOldVersion": {true or false},
+              "Topic": {topicName}
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
 ```
 
 EngineType accepts only MSSQL, Oracle and PostgreSQL for now
 
 ### Andy X Configuration File
 Below is an example of Andy X configuration file, this file should be saved into config directory of Andy X MSSQL Source Connector before running this service.
+
 ``` json
-	{
-		"ServiceUrls": ["http://localhost:9000"],
-		"Tenant": "{tenantName}",
-		"Product": "{productName}",
-		"Component": "{componentName}"
-	}
+    {
+        "ServiceUrls": ["http://localhost:9000"],
+        "Tenant": "{tenantName}",
+        "Product": "{productName}",
+        "Component": "{componentName}"
+    }
 ```
 
 ## How to Engage, Contribute, and Give Feedback
@@ -82,10 +83,11 @@ These are some other repos for related projects:
 
 ## Deploying Andy X MSSQL Source Connector with docker-compose
 
-Andy X MSSQL Source Connector can be easily deployed on a docker container using docker-compose, for more info click [here](https://hub.docker.com/r/buildersoftdev/andyx-mssql-source-connector)
+Andy X MSSQL Source Connector can be easily deployed on a docker container using docker-compose, for more info click [here](https://hub.docker.com/r/buildersoftdev/andyx-mssql-source-connector).
+
 ``` yaml
-    version: '3.4'
-    
+version: '3.4'
+  
     services:
         andyx-mssql-source-connector:
         container_name: andyx-mssql-source-connector
@@ -95,6 +97,7 @@ Andy X MSSQL Source Connector can be easily deployed on a docker container using
             - ./tables_config.json:/app/config/tables_config.json
             - ./andyx_config.json:/app/config/andyx_config.json
 ```
+
 Network configuration using docker-compose is not needed if only Andy X MSSQL Source Connector is deployed. Network should be configured if this adapter will be deployed together with Andy X and Andy X Storage.
 
 Below is an example of deploying Andy X, Andy X Storage, Andy X MSSQL Source Connector and Microsoft SQL Server, if you have problems deploying Andy X via docker-compose please click [here](https://hub.docker.com/r/buildersoftdev/andyx).
@@ -103,20 +106,17 @@ Below is an example of deploying Andy X, Andy X Storage, Andy X MSSQL Source Con
 version: '3.4'
 
 services:
-	
-	
-	andyx-mssql-source-connector:
-		container_name: andyx-andyx-mssql-source-connector
-		image: buildersoftdev/andyx-mssql-source-connector:3.0.0-preview1
-		volumes:
-            # -- In the same folder with docker-compose should be these two files, before running docker-compose. 
-			- ./tables_config.json:/app/config/tables_config.json
-			- ./andyx_config.json:/app/config/andyx_config.json
-		networks:
-			- local
-	
+
+    andyx-mssql-source-connector:
+      container_name: andyx-andyx-mssql-source-connector
+      image: buildersoftdev/andyx-mssql-source-connector:3.0.0-preview1
+      volumes:
+# -- In the same folder with docker-compose should be these two files, before running docker-compose. 
+        - ./tables_config.json:/app/config/tables_config.json
+        - ./andyx_config.json:/app/config/andyx_config.json
+      networks:
+        - local
 # ----------------------------------------------------------------------------------------------------
-		
     andyx-portal:
       container_name: andyx-portal
       image: buildersoftdev/andyx-portal:v3.0.0
@@ -126,7 +126,6 @@ services:
         - XNode:ServiceUrl=http://andyxnode:6540
       networks:
         - local
-
 # ------------------------------------------------------------------------------------------------
 
     andyx:
@@ -141,31 +140,31 @@ services:
         - ./andyx-data:/app/data
       networks:
         - local
-	
-	# ----------------------------------------------------------------------------------------------------
-			
-	sql-server:
-		image: mcr.microsoft.com/mssql/server
-		hostname: sql-server
-		container_name: sql-server
-		ports:
-			- "1433:1433"
-		environment:
-			- ACCEPT_EULA=Y
-			- MSSQL_SA_PASSWORD=YourStrong!Passw0rd
-			- MSSQL_PID=Express
-		networks:
-			- local
-			
-	# ----------------------------------------------------------------------------------------------------
-	
-	networks:
-		local:
-		driver: bridge
+# ----------------------------------------------------------------------------------------------------
+
+    sql-server:
+        image: mcr.microsoft.com/mssql/server
+        hostname: sql-server
+        container_name: sql-server
+        ports:
+            - "1433:1433"
+        environment:
+            - ACCEPT_EULA=Y
+            - MSSQL_SA_PASSWORD=YourStrong!Passw0rd
+            - MSSQL_PID=Express
+        networks:
+        - local
+# ----------------------------------------------------------------------------------------------------
+
+    networks:
+    local:
+    driver: bridge
 ```
 To run Andy X MSSQL Source Connector with docker-compse you should execute 
 
-    docker-compose up -d
+``` bash
+docker-compose up -d
+```
 
 ## Code of conduct
 
