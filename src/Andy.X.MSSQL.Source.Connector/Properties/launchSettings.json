@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "Andy.X.MSSQL.Source.Connector": {
+      "commandName": "Project"
+    },
+    "Docker": {
+      "commandName": "Docker"
+    }
+  }
+}

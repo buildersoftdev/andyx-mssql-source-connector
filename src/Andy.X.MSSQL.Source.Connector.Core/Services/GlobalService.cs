@@ -107,6 +107,8 @@ namespace Andy.X.MSSQL.Source.Connector.Core.Services
 
                     instance!.Connect();
 
+                    Thread.Sleep(2000);
+
                     sqlDbTableServices.TryAdd($"MSSQL-{database.Name}-{table.Name}", instance);
                 }
             }

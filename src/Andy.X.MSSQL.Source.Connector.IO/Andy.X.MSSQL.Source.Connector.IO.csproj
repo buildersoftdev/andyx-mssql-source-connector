@@ -1,23 +1,31 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-    <TargetFramework>net7.0</TargetFramework>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <Nullable>enable</Nullable>
-  </PropertyGroup>
+	<PropertyGroup>
+		<TargetFramework>net7.0</TargetFramework>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>enable</Nullable>
 
-  <ItemGroup>
-    <None Remove="templates\ms-sql\csharp_sql_dbworker.cstemp" />
-    <None Remove="templates\ms-sql\sql_modelgen.sql" />
-  </ItemGroup>
+		<Version>3.0.0</Version>
+		<Company>Buildersoft</Company>
+		<Product>Buildersoft Andy</Product>
+		<Authors>Buildersoft</Authors>
+		<Description>Buildersoft Andy X is a distributed messaging system. This system will empower developers to move into Event Driven Systems. Andy X is a multi-tenant system.</Description>
+		<Copyright>Copyright © Buildersoft 2022</Copyright>
 
-  <ItemGroup>
-    <Content Include="templates\ms-sql\csharp_sql_dbworker.cstemp">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="templates\ms-sql\sql_modelgen.sql">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-  </ItemGroup>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<None Remove="templates\ms-sql\csharp_sql_dbworker.cstemp" />
+		<None Remove="templates\ms-sql\sql_modelgen.sql" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<Content Include="templates\ms-sql\csharp_sql_dbworker.cstemp">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</Content>
+		<Content Include="templates\ms-sql\sql_modelgen.sql">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</Content>
+	</ItemGroup>
 
 </Project>

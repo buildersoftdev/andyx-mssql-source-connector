@@ -31,7 +31,11 @@ namespace Andy.X.Connect.MSSQL.Code.Generated.Service
 
             isConnected = false;
 
-            sqlTableDependency = new SqlTableDependency<{entity}> (connectionString, table.Name);
+            if(table.IncludeOldVersion == true)
+                sqlTableDependency = new SqlTableDependency<{entity}> (connectionString, table.Name, includeOldValues: true);
+            else
+                sqlTableDependency = new SqlTableDependency<{entity}> (connectionString, table.Name, includeOldValues: false);
+
 
             sqlTableDependency.OnStatusChanged += SqlTableDependency_OnStatusChanged;
             sqlTableDependency.OnChanged += SqlTableDependency_OnChanged;
@@ -46,7 +50,7 @@ namespace Andy.X.Connect.MSSQL.Code.Generated.Service
 
             producer = Producer<Guid, {entity}_Message>.CreateNewProducer(xClient)
                 .ForComponent(xNodeConfiguration.Component)
-                .AndTopic($"{dbName}-{table.Name}")
+                .AndTopic(table.Topic)
                 .WithName($"{dbName}-{table.Name}-source")
                 .AddDefaultHeader("x-application","andyx-mssql-source-connector")
                 .AddDefaultHeader("x-application-version", "v3.0.0")
@@ -91,7 +95,7 @@ namespace Andy.X.Connect.MSSQL.Code.Generated.Service
 
     private void SqlTableDependency_OnChanged(object sender, TableDependency.SqlClient.Base.EventArgs.RecordChangedEventArgs<{entity}> e)
         {
-            var message = new {entity}_Message(){Payload = e.Entity};
+            var message = new {entity}_Message(){ Payload = e.Entity, OldPayload = e.EntityOldValues };
             switch (e.ChangeType)
             {
                 case TableDependency.SqlClient.Base.Enums.ChangeType.Delete:
@@ -162,6 +166,7 @@ namespace Andy.X.Connect.MSSQL.Code.Generated.Service
     {
         public EventName EventName { get; set; }
         public {entity} Payload { get; set; }
+        public {entity}? OldPayload { get; set; }
     }
 
     public enum EventName

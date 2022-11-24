@@ -21,5 +21,13 @@
     public class Table
     {
         public string Name { get; set; }
+        public bool IncludeOldVersion { get; set; }
+
+        public string Topic { get; set; }
+
+        public Table()
+        {
+            IncludeOldVersion = false;
+        }
     }
 }

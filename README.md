@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="https://user-images.githubusercontent.com/10813728/202870468-20d05267-a8e6-4f93-a579-f249b8bd1268.png" alt="Sublime's custom image"/>
+</p>
+
 What is Andy X MSSQL Connector?
 ============
 
