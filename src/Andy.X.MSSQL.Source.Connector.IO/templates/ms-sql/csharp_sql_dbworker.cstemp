@@ -1,0 +1,175 @@
+﻿using Andy.X.Client;
+using Andy.X.Client.Abstractions.Consumers;
+using Andy.X.Client.Abstractions.Producers;
+using Andy.X.Client.Abstractions.XClients;
+using Andy.X.Client.Configurations;
+using Andy.X.Client.Models;
+
+using Andy.X.MSSQL.Source.Connector.Core.Configurations;
+using Andy.X.MSSQL.Source.Connector.Core.Configurations.Abstraction.Services;
+using Andy.X.MSSQL.Source.Connector.Core.Utilities.Logging;
+
+using System;
+using TableDependency.SqlClient;
+
+namespace Andy.X.Connect.MSSQL.Code.Generated.Service
+{
+    public class SqlDbTableService : ISqlDbTableService
+    {
+        private readonly string dbName;
+        private readonly Table table;
+
+        private SqlTableDependency<{entity}> sqlTableDependency;
+        private IProducer<Guid, {entity}_Message> producer;
+
+        private bool isConnected;
+
+        public SqlDbTableService(string connectionString, string dbName, Table table, AndyXConfiguration xNodeConfiguration)
+        {
+            this.dbName = dbName;
+            this.table = table;
+
+            isConnected = false;
+
+            sqlTableDependency = new SqlTableDependency<{entity}> (connectionString, table.Name);
+
+            sqlTableDependency.OnStatusChanged += SqlTableDependency_OnStatusChanged;
+            sqlTableDependency.OnChanged += SqlTableDependency_OnChanged;
+            sqlTableDependency.OnError += SqlTableDependency_OnError;
+
+            IXClient xClient = XClient.CreateClient()
+                .ForService(new Uri(xNodeConfiguration.ServiceUrls[0]))
+                .AndTenant(xNodeConfiguration.Tenant)
+                .AndProduct(xNodeConfiguration.Product)
+                .Build();
+
+
+            producer = Producer<Guid, {entity}_Message>.CreateNewProducer(xClient)
+                .ForComponent(xNodeConfiguration.Component)
+                .AndTopic($"{dbName}-{table.Name}")
+                .WithName($"{dbName}-{table.Name}-source")
+                .AddDefaultHeader("x-application","andyx-mssql-source-connector")
+                .AddDefaultHeader("x-application-version", "v3.0.0")
+                .WithSettings(settings =>
+                {
+                    settings.RequireCallback = false;
+                    settings.CompressionType = CompressionType.None;
+                })
+                .Build();
+
+                Logger.LogInformation($"MSSQL source-producer {dbName}-{table.Name} has been initialized");
+        }
+
+        private void SqlTableDependency_OnStatusChanged(object sender, TableDependency.SqlClient.Base.EventArgs.StatusChangedEventArgs e)
+        {
+            if (isConnected == true)
+            {
+                if (e.Status == TableDependency.SqlClient.Base.Enums.TableDependencyStatus.StopDueToError ||
+                    e.Status == TableDependency.SqlClient.Base.Enums.TableDependencyStatus.StopDueToCancellation)
+                {
+                    Logger.LogError($"MSSQL Adapter for {table.Name} has been disconnected");
+
+                    Reconnect();
+                }
+            }
+            else
+            {
+                if (e.Status == TableDependency.SqlClient.Base.Enums.TableDependencyStatus.StopDueToCancellation)
+                    Logger.LogInformation($"MSSQL Adapter for {table.Name} has been disconnected due to cancellation");
+
+            }
+
+            if (e.Status == TableDependency.SqlClient.Base.Enums.TableDependencyStatus.Started)
+                Logger.LogInformation($"MSSQL Adapter for {table.Name} has been connected successfully");
+
+        }
+
+        private void SqlTableDependency_OnError(object sender, TableDependency.SqlClient.Base.EventArgs.ErrorEventArgs e)
+        {
+            Logger.LogError($"MSSQL an error occurred to Adapter {e.Server}|{e.Database}, details={e.Error.Message}");
+        }
+
+    private void SqlTableDependency_OnChanged(object sender, TableDependency.SqlClient.Base.EventArgs.RecordChangedEventArgs<{entity}> e)
+        {
+            var message = new {entity}_Message(){Payload = e.Entity};
+            switch (e.ChangeType)
+            {
+                case TableDependency.SqlClient.Base.Enums.ChangeType.Delete:
+                    message.EventName = EventName.RECORD_DELETED;
+                    ProduceEvent(message);
+                    break;
+                case TableDependency.SqlClient.Base.Enums.ChangeType.Insert:
+                    message.EventName = EventName.RECORD_CREATED;
+                    ProduceEvent(message);
+                    break;
+                case TableDependency.SqlClient.Base.Enums.ChangeType.Update:
+                    message.EventName = EventName.RECORD_UPDATED;
+                    ProduceEvent(message);
+                    break;
+                default:
+                    break;
+            }
+        }
+
+        private async void ProduceEvent({entity}_Message msg)
+        {
+                await producer.SendAsync(Guid.NewGuid(), msg);
+        }
+
+        public void Connect()
+        {
+            isConnected = true;
+         
+            producer.OpenAsync().Wait();
+            Logger.LogInformation($"MSSQL producer {dbName}-{table.Name} is active");
+            
+            sqlTableDependency.Start();
+            Logger.LogInformation($"MSSQL Adapter for {table.Name} is connected");
+
+        }
+
+        private void Reconnect()
+        {
+            //sqlTableDependency.OnStatusChanged -= SqlTableDependency_OnStatusChanged;
+            //sqlTableDependency.OnChanged -= SqlTableDependency_OnChanged;
+            //sqlTableDependency.OnError -= SqlTableDependency_OnError;
+
+            //sqlTableDependency = new SqlTableDependency<{entity}> (connectionString, table.Name);
+
+            //sqlTableDependency.OnStatusChanged += SqlTableDependency_OnStatusChanged;
+            //sqlTableDependency.OnChanged += SqlTableDependency_OnChanged;
+            //sqlTableDependency.OnError += SqlTableDependency_OnError;
+
+            sqlTableDependency.Stop();
+            sqlTableDependency.Start();
+
+            Logger.LogWarning($"MSSQL Adapter for {table.Name} is reconnecting");
+
+        }
+
+        public void Disconnect()
+        {
+            isConnected = false;
+            sqlTableDependency.Stop();
+            Logger.LogWarning($"MSSQL Adapter for {table.Name} is disconnected");
+
+                producer.CloseAsync();
+                Logger.LogInformation($"MSSQL producer {dbName}-{table.Name} is disconnected");
+        }
+    }
+
+    public class {entity}_Message
+    {
+        public EventName EventName { get; set; }
+        public {entity} Payload { get; set; }
+    }
+
+    public enum EventName
+    {
+        RECORD_CREATED,
+        RECORD_UPDATED,
+        RECORD_DELETED
+    }
+
+    {datamodel}
+}

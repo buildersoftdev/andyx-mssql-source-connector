@@ -6,4 +6,17 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
+  <ItemGroup>
+    <PackageReference Include="Buildersoft.Andy.X.Client" Version="3.0.0" />
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.4.0" />
+	  <PackageReference Include="SqlTableDependency" Version="8.5.8" />
+    <PackageReference Include="System.Data.SqlClient" Version="4.8.5" />
+	  <PackageReference Include="System.Collections" Version="4.3.0" />
+	  <PackageReference Include="System.Runtime.Loader" Version="4.3.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Andy.X.MSSQL.Source.Connector.IO\Andy.X.MSSQL.Source.Connector.IO.csproj" />
+  </ItemGroup>
+
 </Project>
